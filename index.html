@@ -1,0 +1,421 @@
+
+raw
+Ecofy dashboard · HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECOFY — Pimientito</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+#scene{width:100vw;height:100vh;position:relative;overflow:hidden;min-height:400px}
+#sky{position:absolute;inset:0;height:70%;transition:background 4s ease}
+.star{position:absolute;border-radius:50%;background:white;transition:opacity 2.5s}
+#sun{position:absolute;width:58px;height:58px;border-radius:50%;background:#FFD93D;
+  transition:left 5s ease,top 5s ease,background 3s,opacity 2s;top:38px;left:80px}
+#moon{position:absolute;width:38px;height:38px;font-size:32px;line-height:38px;text-align:center;
+  opacity:0;transition:opacity 3s,left 5s,top 5s;top:48px;left:560px;user-select:none}
+#clouds{position:absolute;top:0;left:0;width:100%;height:200px;pointer-events:none}
+#mtn-svg{position:absolute;bottom:28%;left:0;width:100%;height:90px;pointer-events:none}
+#grass-svg{position:absolute;bottom:28%;left:0;width:100%;height:24px}
+#ground{position:absolute;bottom:0;left:0;right:0;height:28%;background:#3d2610}
+.panel{position:absolute;background:rgba(8,24,10,0.82);border:1px solid rgba(80,210,105,0.32);
+  border-radius:13px;padding:11px 15px;min-width:124px}
+.plab{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#6ec97e;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.pval{font-size:24px;font-weight:700;color:#e8fce8;line-height:1.1;transition:color .5s}
+.punit{font-size:11px;color:#6ec97e;margin-top:2px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#1e4a26;transition:background .4s,box-shadow .4s;flex-shrink:0}
+.dot.on{background:#3ddc6e;box-shadow:0 0 7px #3ddc6e}
+#estado-bar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  background:rgba(8,24,10,0.88);border:1px solid rgba(80,210,105,0.38);
+  border-radius:999px;padding:8px 26px;display:flex;align-items:center;gap:12px;white-space:nowrap}
+#estado-val{font-size:13px;font-weight:700;letter-spacing:.07em;color:#e8fce8;transition:color .5s}
+#estado-desc{font-size:11px;color:#6ec97e}
+#hdr{position:absolute;top:13px;left:16px;z-index:20}
+#hdr-logo{font-size:16px;font-weight:700;color:#e8fce8;letter-spacing:.09em}
+#hdr-sub{font-size:9px;color:#6ec97e;letter-spacing:.14em;text-transform:uppercase;margin-top:1px}
+#hdr-conn{display:flex;align-items:center;gap:5px;font-size:10px;color:#6ec97e;margin-top:4px}
+#clock{position:absolute;top:13px;right:16px;text-align:right;z-index:20}
+#clock-t{font-size:14px;font-weight:700;color:#e8fce8;font-family:monospace;letter-spacing:.05em}
+#clock-d{font-size:10px;color:#6ec97e;margin-top:2px}
+#bubble{position:absolute;background:rgba(8,24,10,0.88);border:1px solid rgba(80,210,105,.3);
+  border-radius:10px;padding:5px 11px;font-size:11px;color:#e8fce8;white-space:nowrap;
+  transition:opacity .5s;opacity:0;pointer-events:none;bottom:52%;left:55%}
+/* Loading overlay */
+#loader{position:absolute;inset:0;background:rgba(8,20,10,.85);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:100;transition:opacity .8s}
+#loader.hide{opacity:0;pointer-events:none}
+#loader-txt{color:#6ec97e;font-size:13px;margin-top:14px;letter-spacing:.08em}
+#loader-bar-wrap{width:160px;height:4px;background:#1e4a26;border-radius:4px;margin-top:10px;overflow:hidden}
+#loader-bar{height:4px;background:#3ddc6e;border-radius:4px;width:0%;transition:width .4s}
+ 
+@keyframes ppfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ppshake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(5deg)}}
+@keyframes ppbounce{0%,100%{transform:scaleY(1) scaleX(1)}35%{transform:scaleY(1.13) scaleX(.92)}65%{transform:scaleY(.94) scaleX(1.06)}}
+@keyframes sweatfall{0%{opacity:0;transform:translateY(-3px)}40%{opacity:1}100%{opacity:0;transform:translateY(12px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="scene">
+ 
+  <!-- LOADER -->
+  <div id="loader">
+    <svg width="48" height="48" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="#1e4a26" stroke-width="4"/>
+      <circle cx="24" cy="24" r="20" fill="none" stroke="#3ddc6e" stroke-width="4"
+        stroke-dasharray="32 94" stroke-linecap="round"
+        style="animation:spin 1s linear infinite;transform-origin:24px 24px"/>
+    </svg>
+    <div id="loader-txt">Conectando con tu planta…</div>
+    <div id="loader-bar-wrap"><div id="loader-bar"></div></div>
+  </div>
+ 
+  <div id="sky"></div>
+  <div id="stars"></div>
+  <div id="sun"></div>
+  <div id="moon">🌙</div>
+ 
+  <svg id="clouds" viewBox="0 0 680 180" preserveAspectRatio="xMidYMid meet">
+    <g id="cl1" style="transition:opacity 3s">
+      <circle cx="110" cy="72" r="22" fill="white"/><circle cx="133" cy="61" r="28" fill="white"/>
+      <circle cx="160" cy="70" r="20" fill="white"/><circle cx="140" cy="80" r="17" fill="white"/>
+    </g>
+    <g id="cl2" style="transition:opacity 3s">
+      <circle cx="460" cy="56" r="19" fill="white"/><circle cx="482" cy="46" r="25" fill="white"/>
+      <circle cx="506" cy="55" r="18" fill="white"/><circle cx="486" cy="66" r="15" fill="white"/>
+    </g>
+    <g id="cl3" opacity="0" style="transition:opacity 3s">
+      <circle cx="295" cy="66" r="24" fill="white"/><circle cx="320" cy="55" r="30" fill="white"/>
+      <circle cx="349" cy="64" r="22" fill="white"/><circle cx="327" cy="75" r="19" fill="white"/>
+    </g>
+    <g id="cl4" opacity="0" style="transition:opacity 3s">
+      <circle cx="75"  cy="92" r="20" fill="white"/><circle cx="97"  cy="82" r="26" fill="white"/>
+      <circle cx="123" cy="90" r="18" fill="white"/>
+    </g>
+    <g id="cl5" opacity="0" style="transition:opacity 3s">
+      <circle cx="545" cy="82" r="22" fill="white"/><circle cx="568" cy="72" r="27" fill="white"/>
+      <circle cx="592" cy="80" r="19" fill="white"/>
+    </g>
+  </svg>
+ 
+  <svg id="mtn-svg" viewBox="0 0 680 90" preserveAspectRatio="none">
+    <polygon points="0,90 75,35 155,90"   fill="#2d5c27" opacity=".62"/>
+    <polygon points="95,90 205,15 315,90"  fill="#3a7030" opacity=".70"/>
+    <polygon points="255,90 365,30 478,90" fill="#2d5c27" opacity=".65"/>
+    <polygon points="415,90 528,50 640,90" fill="#3a7030" opacity=".60"/>
+    <polygon points="545,90 648,28 760,90" fill="#2d5c27" opacity=".55"/>
+  </svg>
+  <svg id="grass-svg" viewBox="0 0 680 24" preserveAspectRatio="none">
+    <rect width="680" height="24" fill="#4a8c3a"/>
+    <path d="M0,10 Q17,0 34,10 Q51,0 68,10 Q85,0 102,10 Q119,0 136,10 Q153,0 170,10 Q187,0 204,10 Q221,0 238,10 Q255,0 272,10 Q289,0 306,10 Q323,0 340,10 Q357,0 374,10 Q391,0 408,10 Q425,0 442,10 Q459,0 476,10 Q493,0 510,10 Q527,0 544,10 Q561,0 578,10 Q595,0 612,10 Q629,0 646,10 Q663,0 680,10 L680,24 L0,24Z" fill="#5db048"/>
+  </svg>
+  <div id="ground"></div>
+ 
+  <!-- PLANT -->
+  <svg width="190" height="230" viewBox="0 0 190 230"
+       style="position:absolute;bottom:23%;left:50%;transform:translateX(-50%)">
+    <polygon points="58,195 132,195 124,220 66,220" fill="#b5631a"/>
+    <rect x="53" y="186" width="84" height="13" rx="4" fill="#c97b2a"/>
+    <line x1="78"  y1="195" x2="75"  y2="220" stroke="#9a4e14" stroke-width="1.5"/>
+    <line x1="112" y1="195" x2="115" y2="220" stroke="#9a4e14" stroke-width="1.5"/>
+    <ellipse cx="95" cy="188" rx="40" ry="9" fill="#4a2e0a"/>
+    <path d="M95,186 Q93,158 95,133 Q97,108 93,83" stroke="#5a8c30" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M94,122 Q74,109 55,112" stroke="#5a8c30" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M94,104 Q113,92 132,94"  stroke="#5a8c30" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M93,83  Q89,69 85,59"   stroke="#5a8c30" stroke-width="3"   fill="none" stroke-linecap="round"/>
+    <ellipse cx="94" cy="150" rx="14" ry="7" fill="#4aaa28" transform="rotate(-30 94 150)"/>
+    <ellipse cx="94" cy="125" rx="13" ry="6" fill="#5bbb35" transform="rotate(22 94 125)"/>
+    <ellipse cx="48" cy="110" rx="16" ry="7" fill="#4aaa28" transform="rotate(-10 48 110)"/>
+    <ellipse cx="136" cy="92" rx="15" ry="7" fill="#5bbb35" transform="rotate(16 136 92)"/>
+    <ellipse cx="85"  cy="59" rx="12" ry="6" fill="#4aaa28" transform="rotate(-20 85 59)"/>
+    <g id="pg" style="animation:ppfloat 2.9s ease-in-out infinite;transform-origin:55px 128px">
+      <ellipse cx="55" cy="130" rx="10" ry="15" fill="#27ae60"/>
+      <ellipse cx="55" cy="130" rx="10" ry="15" fill="url(#pgrd)" opacity=".35"/>
+      <line x1="55" y1="115" x2="55" y2="112" stroke="#5a8c30" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="50" cy="122" rx="3.5" ry="5.5" fill="white" opacity=".20" transform="rotate(-16 50 122)"/>
+      <circle cx="50" cy="128" r="2.8" fill="#1a5c20"/>
+      <circle cx="60" cy="128" r="2.8" fill="#1a5c20"/>
+      <circle cx="51" cy="127" r=".9"  fill="white"/>
+      <circle cx="61" cy="127" r=".9"  fill="white"/>
+      <path id="brl" d="M46 122 Q50 119 54 121" stroke="#1a5c20" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <path id="brr" d="M56 121 Q60 119 64 122" stroke="#1a5c20" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <path id="pm"  d="M49 135 Q55 139 61 135" stroke="#1a5c20" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <ellipse id="ckl" cx="46" cy="131" rx="4" ry="2.5" fill="#1e8a40" opacity="0"/>
+      <ellipse id="ckr" cx="64" cy="131" rx="4" ry="2.5" fill="#1e8a40" opacity="0"/>
+      <ellipse id="psweat" cx="66" cy="123" rx="2.5" ry="4" fill="#2edcd4" opacity="0" style="animation:sweatfall 1s .1s infinite"/>
+      <text id="pbang" x="55" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#e05252" opacity="0">!</text>
+    </g>
+    <defs>
+      <radialGradient id="pgrd" cx="35%" cy="30%" r="70%">
+        <stop offset="0%"   stop-color="white"   stop-opacity=".5"/>
+        <stop offset="100%" stop-color="#1a5c20" stop-opacity=".3"/>
+      </radialGradient>
+    </defs>
+  </svg>
+ 
+  <div id="bubble"></div>
+ 
+  <!-- PANELS -->
+  <div class="panel" style="top:54px;left:14px">
+    <div class="plab">🌡 Temperatura</div>
+    <div class="pval" id="dtemp">--</div>
+    <div class="punit">°C</div>
+  </div>
+  <div class="panel" style="top:54px;right:14px">
+    <div class="plab">💧 Humedad suelo</div>
+    <div class="pval" id="dhum">--</div>
+    <div class="punit">%</div>
+  </div>
+  <div class="panel" style="bottom:36%;left:14px">
+    <div class="plab">☀ Luz</div>
+    <div class="pval" id="dlux">--</div>
+    <div class="punit">lux</div>
+  </div>
+  <div class="panel" style="bottom:36%;right:14px;min-width:140px">
+    <div class="plab"><span class="dot" id="cdot"></span>Firebase</div>
+    <div style="font-size:11px;color:#6ec97e;margin-top:4px" id="clabel">Conectando…</div>
+    <div style="font-size:10px;color:#4a7a55;margin-top:3px" id="cupd">--</div>
+  </div>
+ 
+  <div id="estado-bar">
+    <span id="estado-val">--</span>
+    <span style="color:rgba(80,210,105,.28)">|</span>
+    <span id="estado-desc">Esperando datos…</span>
+  </div>
+ 
+  <div id="hdr">
+    <div id="hdr-logo">🌶 ECOFY</div>
+    <div id="hdr-sub">monitor de planta</div>
+    <div id="hdr-conn"><span class="dot" id="hdot"></span><span id="hconn">conectando…</span></div>
+  </div>
+  <div id="clock">
+    <div id="clock-t">--:--:--</div>
+    <div id="clock-d">--</div>
+  </div>
+</div>
+ 
+<script>
+/* ── Reloj local ── */
+function tick(){
+  const n=new Date();
+  document.getElementById('clock-t').textContent=n.toLocaleTimeString('es-EC');
+  document.getElementById('clock-d').textContent=n.toLocaleDateString('es-EC',{weekday:'short',day:'2-digit',month:'short'});
+}
+tick(); setInterval(tick,1000);
+ 
+/* ── Estrellas ── */
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<55;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()<.25?2:1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*65}%;opacity:0;transition:opacity ${1+Math.random()*1.5}s`;
+    c.appendChild(s);
+  }
+})();
+ 
+/* ── Cielo ── */
+const SKIES={
+  day:    {bg:'#56aae8',sunC:'#FFD93D',sL:'42%',sT:'28px',sO:1, mO:0,c:[.7,.75,0,0,0],   stars:0},
+  cloudy: {bg:'#8ca8b8',sunC:'#FFD93D',sL:'42%',sT:'28px',sO:.2,mO:0,c:[.95,.9,.92,.88,.85],stars:0},
+  sunrise:{bg:'#f0914a',sunC:'#FFB830',sL:'12%',sT:'45px',sO:1, mO:0,c:[.5,.4,.15,0,0],  stars:.2},
+  sunset: {bg:'#d96b2a',sunC:'#ff7d00',sL:'78%',sT:'55px',sO:1, mO:0,c:[.3,.25,0,0,0],   stars:.25},
+  night:  {bg:'#0c1a3a',sunC:'#FFD93D',sL:'105%',sT:'80px',sO:0,mO:1,c:[0,0,0,0,0],      stars:1}
+};
+function skyFromLux(lux){
+  if(lux===null){const h=new Date().getHours();return h>=6&&h<8?'sunrise':h>=8&&h<17?'day':h>=17&&h<20?'sunset':'night';}
+  if(lux>800)  return 'day';
+  if(lux>200)  return 'cloudy';
+  if(lux>30)   return 'sunrise';
+  if(lux>5)    return 'sunset';
+  return 'night';
+}
+function applySky(state){
+  const s=SKIES[state]||SKIES.day;
+  document.getElementById('sky').style.background=s.bg;
+  const sun=document.getElementById('sun');
+  sun.style.background=s.sunC;sun.style.left=s.sL;sun.style.top=s.sT;sun.style.opacity=s.sO;
+  document.getElementById('moon').style.opacity=s.mO;
+  ['cl1','cl2','cl3','cl4','cl5'].forEach((id,i)=>document.getElementById(id).style.opacity=s.c[i]);
+  document.querySelectorAll('.star').forEach(st=>st.style.opacity=s.stars*(Math.random()>.35?.85:.3));
+  const luxEl=document.getElementById('dlux');
+  if(state==='night')        luxEl.style.color='#7ecfc0';
+  else if(state==='sunset'||state==='sunrise') luxEl.style.color='#ffc45a';
+  else if(state==='cloudy')  luxEl.style.color='#b8d8e8';
+  else                       luxEl.style.color='#fffbe8';
+}
+applySky(skyFromLux(null));
+ 
+/* ── Moods ── */
+const MOODS={
+  ALERTA:{mouth:'M49 138 Q55 134 61 138',bl:'M46 120 Q50 123 54 121',br:'M56 121 Q60 123 64 120',
+    cheek:0,sweat:1,bang:1,anim:'ppshake',bubble:'😰 ¡Riégame YA!',bcolor:'#e05252',
+    eval:'RIEGO YA',edesc:'humedad crítica — riega de inmediato',ecolor:'#ff7a7a'},
+  RIEGO:{mouth:'M49 136 Q55 139 61 136',bl:'M46 121 Q50 120 54 121',br:'M56 121 Q60 120 64 121',
+    cheek:0,sweat:1,bang:0,anim:'ppfloat',bubble:'😟 Necesito agua…',bcolor:'#e08535',
+    eval:'NECESITA AGUA',edesc:'humedad baja — riega pronto',ecolor:'#ffc45a'},
+  NORMAL:{mouth:'M49 135 Q55 138 61 135',bl:'M46 122 Q50 120 54 121',br:'M56 121 Q60 120 64 122',
+    cheek:0,sweat:0,bang:0,anim:'ppfloat',bubble:'😐 Todo bien',bcolor:'#7ecf8e',
+    eval:'TIERRA OK',edesc:'condiciones normales',ecolor:'#b8f0c0'},
+  FELIZ:{mouth:'M47 133 Q55 141 63 133',bl:'M46 124 Q50 121 54 123',br:'M56 123 Q60 121 64 124',
+    cheek:.65,sweat:0,bang:0,anim:'ppbounce',bubble:'😄 ¡Feliz!',bcolor:'#3ddc6e',
+    eval:'ÓPTIMO',edesc:'planta en condiciones ideales 🌶️',ecolor:'#3ddc6e'}
+};
+let lastEstado='';
+function applyMood(estado){
+  if(estado===lastEstado)return; lastEstado=estado;
+  const m=MOODS[estado]||MOODS.NORMAL;
+  document.getElementById('pm').setAttribute('d',m.mouth);
+  document.getElementById('brl').setAttribute('d',m.bl);
+  document.getElementById('brr').setAttribute('d',m.br);
+  document.getElementById('ckl').setAttribute('opacity',m.cheek);
+  document.getElementById('ckr').setAttribute('opacity',m.cheek);
+  document.getElementById('psweat').style.opacity=m.sweat?'1':'0';
+  document.getElementById('pbang').setAttribute('opacity',m.bang);
+  const pg=document.getElementById('pg');
+  pg.style.animation='none';
+  setTimeout(()=>{pg.style.animation=`${m.anim} 2.8s ease-in-out infinite`;pg.style.transformOrigin='55px 130px';},30);
+  const bub=document.getElementById('bubble');
+  bub.textContent=m.bubble;bub.style.borderColor=m.bcolor+'55';bub.style.opacity='1';
+  document.getElementById('estado-val').textContent=m.eval;
+  document.getElementById('estado-val').style.color=m.ecolor;
+  document.getElementById('estado-desc').textContent=m.edesc;
+}
+ 
+/* ── Loader ── */
+let loaderPct=0;
+const loaderInterval=setInterval(()=>{
+  loaderPct=Math.min(loaderPct+8,85);
+  document.getElementById('loader-bar').style.width=loaderPct+'%';
+},300);
+function hideLoader(){
+  clearInterval(loaderInterval);
+  document.getElementById('loader-bar').style.width='100%';
+  setTimeout(()=>document.getElementById('loader').classList.add('hide'),400);
+}
+ 
+/* ── Procesar datos de Firebase ── */
+let firstLoad=true;
+ 
+function procesarDatos(d){
+  if(!d||typeof d!=='object')return;
+  if(firstLoad){firstLoad=false;hideLoader();}
+ 
+  document.getElementById('cdot').classList.add('on');
+  document.getElementById('hdot').classList.add('on');
+  document.getElementById('clabel').textContent='en vivo ⚡';
+  document.getElementById('hconn').textContent='en vivo';
+  document.getElementById('cupd').textContent=new Date().toLocaleTimeString('es-EC');
+ 
+  const temp=parseFloat(d.temperatura)||0;
+  const hum=parseInt(d.humedad)||0;
+  const lux=parseFloat(d.luz)||0;
+  const estado=(d.estado||'NORMAL').toUpperCase().trim();
+ 
+  document.getElementById('dtemp').textContent=temp.toFixed(1);
+  document.getElementById('dhum').textContent=hum;
+  document.getElementById('dlux').textContent=Math.round(lux);
+ 
+  document.getElementById('dtemp').style.color=temp>38?'#ff7a7a':temp>30?'#ffc45a':'#e8fce8';
+  document.getElementById('dhum').style.color=hum<15?'#ff7a7a':hum<30?'#ffc45a':hum>60?'#6fd4ff':'#e8fce8';
+ 
+  applySky(skyFromLux(lux));
+  applyMood(estado);
+}
+ 
+/* ══════════════════════════════════════════════════════
+   CONEXIÓN FIREBASE — EventSource (tiempo real nativo)
+   Reemplaza el polling cada 2 s por streaming SSE.
+   Firebase RTDB soporta ?accept=text/event-stream
+   nativamente: el servidor empuja el dato en cuanto
+   el ESP32 escribe, sin necesidad de volver a pedir.
+   ══════════════════════════════════════════════════════ */
+const DB_BASE = 'https://ecofy-b94e9-default-rtdb.firebaseio.com/ECOFY';
+const DB_STREAM = DB_BASE + '.json?accept=text/event-stream';
+const DB_REST   = DB_BASE + '.json';
+ 
+let evtSource = null;
+let reconectarTimeout = null;
+let fallCount = 0;
+ 
+function marcarDesconectado(){
+  document.getElementById('cdot').classList.remove('on');
+  document.getElementById('hdot').classList.remove('on');
+  document.getElementById('clabel').textContent='reconectando…';
+  document.getElementById('hconn').textContent='sin conexión';
+}
+ 
+/* ── Fallback: fetch REST una sola vez para arrancar rápido ── */
+async function fetchUnaVez(){
+  try{
+    const res=await fetch(DB_REST);
+    if(!res.ok)return;
+    const d=await res.json();
+    procesarDatos(d);
+  }catch(e){
+    console.warn('Fetch inicial fallido:',e);
+  }
+}
+ 
+/* ── Iniciar EventSource (streaming en tiempo real) ── */
+function conectarStream(){
+  if(evtSource){evtSource.close();evtSource=null;}
+  clearTimeout(reconectarTimeout);
+ 
+  try{
+    evtSource=new EventSource(DB_STREAM);
+ 
+    /* Evento "put": llega cuando Firebase escribe cualquier campo bajo /ECOFY */
+    evtSource.addEventListener('put',function(e){
+      try{
+        fallCount=0;
+        const msg=JSON.parse(e.data);
+        /* msg.path puede ser "/" (todo el nodo) o "/campo" (campo suelto) */
+        if(msg.path==='/' && msg.data && typeof msg.data==='object'){
+          procesarDatos(msg.data);
+        } else if(msg.path && msg.path.length>1){
+          /* Actualización parcial: releer el nodo completo */
+          fetchUnaVez();
+        }
+      }catch(err){console.warn('Parse SSE:',err);}
+    });
+ 
+    /* Evento "patch": actualizaciones parciales */
+    evtSource.addEventListener('patch',function(e){
+      try{
+        fallCount=0;
+        fetchUnaVez(); /* re-leer completo para garantizar consistencia */
+      }catch(err){console.warn('Patch SSE:',err);}
+    });
+ 
+    evtSource.onerror=function(){
+      fallCount++;
+      marcarDesconectado();
+      evtSource.close();
+      evtSource=null;
+      /* Reintentar en 3 s — EventSource nativo no siempre reconecta con RTDB */
+      reconectarTimeout=setTimeout(conectarStream, 3000);
+    };
+ 
+  }catch(e){
+    /* Navegador sin soporte EventSource — caer en polling lento */
+    console.warn('EventSource no soportado, usando polling:',e);
+    usarPolling();
+  }
+}
+ 
+/* ── Polling de respaldo (solo si EventSource falla) ── */
+function usarPolling(){
+  fetchUnaVez();
+  setInterval(fetchUnaVez, 3000);
+}
+ 
+/* ── Arranque: fetch inmediato + stream ── */
+fetchUnaVez();       /* muestra datos de inmediato sin esperar el handshake SSE */
+conectarStream();    /* abre el canal de tiempo real */
+</script>
+</body>
+</html>
