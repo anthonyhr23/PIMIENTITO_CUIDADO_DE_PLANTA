@@ -179,6 +179,15 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-u
     <div style="font-size:10px;color:#4a7a55;margin-top:3px" id="cupd">--</div>
   </div>
  
+
+  <!-- BOTÓN DESCARGAR EXCEL -->
+  <div style="position:absolute;bottom:58px;left:50%;transform:translateX(-50%);z-index:20;">
+    <button onclick="descargarExcel()" style="background:rgba(8,24,10,0.88);border:1px solid rgba(80,210,105,0.5);border-radius:999px;padding:7px 20px;color:#3ddc6e;font-size:11px;font-weight:700;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;" onmouseover="this.style.background='rgba(34,197,94,0.18)'" onmouseout="this.style.background='rgba(8,24,10,0.88)'">
+      📥 Descargar Excel
+      <span id="excel-count" style="background:rgba(34,197,94,0.2);border-radius:999px;padding:1px 8px;font-size:10px;">0 registros</span>
+    </button>
+  </div>
+
   <div id="estado-bar">
     <span id="estado-val">--</span>
     <span style="color:rgba(80,210,105,.28)">|</span>
@@ -323,6 +332,7 @@ function procesarDatos(d){
  
   applySky(skyFromLux(lux));
   applyMood(estado);
+  guardarRegistro(temp, hum, lux, estado);
 }
  
 /* ══════════════════════════════════════════════════════
@@ -412,6 +422,48 @@ function usarPolling(){
   setInterval(fetchUnaVez, 3000);
 }
  
+
+/* ── Historial y descarga Excel ── */
+const historico = [];
+
+function guardarRegistro(temp, hum, lux, estado) {
+  const ahora = new Date();
+  historico.push({
+    fecha:       ahora.toLocaleDateString('es-EC'),
+    hora:        ahora.toLocaleTimeString('es-EC'),
+    temperatura_C:    temp,
+    humedadSuelo_PCT: hum,
+    luz_PCT:          lux,
+    estado:           estado
+  });
+  const el = document.getElementById('excel-count');
+  if (el) el.textContent = historico.length + ' registro' + (historico.length !== 1 ? 's' : '');
+}
+
+function descargarExcel() {
+  if (historico.length === 0) {
+    alert('Aún no hay registros. Espera a que lleguen datos del sensor.');
+    return;
+  }
+
+  const cols = ['fecha','hora','temperatura_C','humedadSuelo_PCT','luz_PCT','estado'];
+  const headers = ['Fecha','Hora','Temperatura (°C)','Humedad Suelo (%)','Luz (lux)','Estado'];
+
+  let csv = '\uFEFF'; // BOM para que Excel lo abra bien en español
+  csv += headers.join(';') + '\n';
+  historico.forEach(r => {
+    csv += cols.map(c => String(r[c]).replace(/;/g,',')).join(';') + '\n';
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'ecofy_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /* ── Arranque: fetch inmediato + stream ── */
 fetchUnaVez();       /* muestra datos de inmediato sin esperar el handshake SSE */
 conectarStream();    /* abre el canal de tiempo real */
