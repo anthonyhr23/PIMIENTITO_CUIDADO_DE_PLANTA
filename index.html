@@ -1,4 +1,3 @@
-
 raw
 Ecofy dashboard · HTML
 <!DOCTYPE html>
@@ -310,9 +309,9 @@ function procesarDatos(d){
   document.getElementById('hconn').textContent='en vivo';
   document.getElementById('cupd').textContent=new Date().toLocaleTimeString('es-EC');
  
-  const temp=parseFloat(d.temperatura)||0;
-  const hum=parseInt(d.humedad)||0;
-  const lux=parseFloat(d.luz)||0;
+  const temp=parseFloat(d.temperatura_C)||0;
+  const hum=parseInt(d.humedadSuelo_PCT)||0;
+  const lux=parseFloat(d.luz_PCT)||0;
   const estado=(d.estado||'NORMAL').toUpperCase().trim();
  
   document.getElementById('dtemp').textContent=temp.toFixed(1);
